@@ -2,6 +2,12 @@
 module.exports = {
   darkMode: ['class'],
   content: ['./index.html', './src/**/*.{ts,tsx}'],
+  safelist: [
+    'bg-green-500',
+    'bg-yellow-400',
+    'bg-red-500',
+    'bg-orange-500',
+  ],
   theme: {
     extend: {
       colors: {

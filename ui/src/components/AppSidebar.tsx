@@ -125,7 +125,7 @@ export function AppSidebar() {
       <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col border-r bg-background">
         <NavContent />
       </aside>
-      <div className="fixed left-4 top-4 z-50 lg:hidden">
+      <div className="fixed top-0 left-0 right-0 h-14 z-40 flex items-center border-b bg-background px-4 lg:hidden">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon">

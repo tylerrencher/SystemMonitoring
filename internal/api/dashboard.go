@@ -4,18 +4,21 @@ import (
 	"context"
 	"net/http"
 	"time"
+
+	"github.com/tylerrencher/systemmonitoring/internal/alerts"
 )
 
 type DashboardResponse struct {
-	BatterySoCPct     float32          `json:"battery_soc_pct"`
-	BatteryPowerW     float32          `json:"battery_power_w"`
-	PVPowerW          float32          `json:"pv_power_w"`
-	LoadPowerW        float32          `json:"load_power_w"`
-	GeneratorPowerW   float32          `json:"generator_power_w"`
-	PowerSource       string           `json:"power_source"`
-	TodayConsumptionKWh float32         `json:"today_consumption_kwh"`
-	TopConsumers      []Consumer       `json:"top_consumers"`
-	Weather           *WeatherSnapshot `json:"weather,omitempty"`
+	BatterySoCPct       float32              `json:"battery_soc_pct"`
+	BatteryPowerW       float32              `json:"battery_power_w"`
+	PVPowerW            float32              `json:"pv_power_w"`
+	LoadPowerW          float32              `json:"load_power_w"`
+	GeneratorPowerW     float32              `json:"generator_power_w"`
+	PowerSource         string               `json:"power_source"`
+	TodayConsumptionKWh float32              `json:"today_consumption_kwh"`
+	TopConsumers        []Consumer           `json:"top_consumers"`
+	Weather             *WeatherSnapshot     `json:"weather,omitempty"`
+	ActiveAlerts        []alerts.ActiveAlert `json:"active_alerts"`
 }
 
 type Consumer struct {
@@ -180,6 +183,12 @@ func (s *Server) queryDashboard(ctx context.Context, window time.Duration) (*Das
 		if snap.TempF != nil || snap.Humidity != nil {
 			resp.Weather = snap
 		}
+	}
+
+	if s.alertState != nil {
+		resp.ActiveAlerts = s.alertState.Active()
+	} else {
+		resp.ActiveAlerts = []alerts.ActiveAlert{}
 	}
 
 	return resp, nil

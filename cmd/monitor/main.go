@@ -14,6 +14,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/tylerrencher/systemmonitoring/internal/alerts"
 	"github.com/tylerrencher/systemmonitoring/internal/api"
 	"github.com/tylerrencher/systemmonitoring/internal/config"
 	appdb "github.com/tylerrencher/systemmonitoring/internal/db"
@@ -59,7 +60,15 @@ func serveCmd() *cobra.Command {
 			}
 			defer pool.Close()
 
+			alertState := alerts.NewState()
+
 			var wg sync.WaitGroup
+
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				alerts.NewEngine(pool, cfg, alertState).Run(ctx)
+			}()
 
 			for _, dev := range cfg.IoTawattDevices {
 				dev := dev
@@ -91,7 +100,7 @@ func serveCmd() *cobra.Command {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				srv := api.NewServer(cfg, pool).WithStatic(uiFS())
+				srv := api.NewServer(cfg, pool).WithStatic(uiFS()).WithAlertState(alertState)
 				if err := srv.Serve(ctx); err != nil {
 					log.Printf("[api] error: %v", err)
 				}
@@ -257,6 +266,7 @@ func userAddCmd() *cobra.Command {
 	cmd.Flags().StringVar(&email, "email", "", "email address")
 	return cmd
 }
+
 
 func parseTimeRange(source, from, to string) (time.Time, time.Time, error) {
 	toTime := time.Now()

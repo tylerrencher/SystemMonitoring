@@ -15,7 +15,7 @@ function ProtectedLayout() {
   return (
     <div className="min-h-screen">
       <AppSidebar />
-      <main className="lg:pl-64">
+      <main className="pt-14 lg:pt-0 lg:pl-64">
         <div className="px-4 py-8 md:px-8">
           <Outlet />
         </div>

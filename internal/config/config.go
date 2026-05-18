@@ -35,6 +35,12 @@ type Config struct {
 	SolarActiveThresholdW     float64
 	GeneratorActiveThresholdW float64
 	TopConsumersWindow        time.Duration
+
+	SMTPHost     string
+	SMTPPort     int
+	SMTPUsername string
+	SMTPPassword string
+	SMTPFrom     string
 }
 
 func Load() (*Config, error) {
@@ -55,6 +61,17 @@ func Load() (*Config, error) {
 		BatteryCapacityKWh:        parseFloat(getEnv("BATTERY_CAPACITY_KWH", "135")),
 		SolarActiveThresholdW:     parseFloat(getEnv("SOLAR_ACTIVE_THRESHOLD_W", "50")),
 		GeneratorActiveThresholdW: parseFloat(getEnv("GENERATOR_ACTIVE_THRESHOLD_W", "100")),
+
+		SMTPHost:     getEnv("SMTP_HOST", "smtp-mail.outlook.com"),
+		SMTPUsername: os.Getenv("SMTP_USERNAME"),
+		SMTPPassword: os.Getenv("SMTP_PASSWORD"),
+		SMTPFrom:     getEnv("SMTP_FROM", os.Getenv("SMTP_USERNAME")),
+	}
+
+	if port := os.Getenv("SMTP_PORT"); port != "" {
+		fmt.Sscanf(port, "%d", &cfg.SMTPPort)
+	} else {
+		cfg.SMTPPort = 587
 	}
 
 	if port := os.Getenv("SOLAR_MQTT_PORT"); port != "" {
