@@ -160,7 +160,7 @@ func TestDashboardRequiresSession(t *testing.T) {
 }
 
 func TestDashboardWithValidSession(t *testing.T) {
-	testhelper.Truncate(t, dbPool, "users")
+	testhelper.Truncate(t, dbPool, "users", "solar_totals", "solar_readings", "iotawatt_readings", "weather_readings")
 	insertTestUser(t, "tyler", "admin", "pass")
 
 	ts := httptest.NewServer(apiServer.Handler())

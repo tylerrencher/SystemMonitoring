@@ -10,13 +10,15 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/tylerrencher/systemmonitoring/internal/alerts"
 	"github.com/tylerrencher/systemmonitoring/internal/config"
 )
 
 type Server struct {
-	cfg    *config.Config
-	pool   *pgxpool.Pool
-	static fs.FS
+	cfg        *config.Config
+	pool       *pgxpool.Pool
+	static     fs.FS
+	alertState *alerts.State
 }
 
 func NewServer(cfg *config.Config, pool *pgxpool.Pool) *Server {
@@ -28,6 +30,11 @@ func (s *Server) WithStatic(fsys fs.FS) *Server {
 	return s
 }
 
+func (s *Server) WithAlertState(state *alerts.State) *Server {
+	s.alertState = state
+	return s
+}
+
 // Handler builds and returns the HTTP handler for the API. Used by Serve and
 // by httptest-based integration tests.
 func (s *Server) Handler() http.Handler {
@@ -35,13 +42,18 @@ func (s *Server) Handler() http.Handler {
 
 	mux.HandleFunc("POST /api/v1/auth/login", s.login)
 	mux.Handle("POST /api/v1/auth/logout", s.auth(http.HandlerFunc(s.logout)))
-	mux.HandleFunc("GET /api/v1/dashboard", s.dashboard)
+	mux.Handle("GET /api/v1/dashboard", s.auth(http.HandlerFunc(s.dashboard)))
 	mux.HandleFunc("GET /api/v1/series", s.seriesList)
 	mux.HandleFunc("GET /api/v1/solar/inverters", s.inverterList)
 	mux.HandleFunc("GET /api/v1/charts/power", s.chartPower)
 	mux.HandleFunc("GET /api/v1/charts/solar", s.chartSolar)
 	mux.HandleFunc("GET /api/v1/charts/weather", s.chartWeather)
 	mux.HandleFunc("GET /api/v1/ws", s.wsHandler)
+	mux.HandleFunc("GET /api/v1/alerts", s.listAlerts)
+	mux.Handle("GET /api/v1/alerts/preferences", s.auth(http.HandlerFunc(s.getPreferences)))
+	mux.Handle("PUT /api/v1/alerts/preferences", s.auth(http.HandlerFunc(s.putPreferences)))
+	mux.Handle("POST /api/v1/alerts/{key}/mute", s.auth(http.HandlerFunc(s.muteAlert)))
+	mux.Handle("DELETE /api/v1/alerts/{key}/mute", s.auth(http.HandlerFunc(s.unmuteAlert)))
 
 	if s.static != nil {
 		mux.Handle("/", spaHandler(s.static))
