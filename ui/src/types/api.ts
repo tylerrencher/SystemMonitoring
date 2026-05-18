@@ -22,7 +22,7 @@ export interface DashboardData {
   load_power_w: number
   generator_power_w: number
   power_source: string
-  total_consumption_w: number
+  today_consumption_kwh: number
   top_consumers: Consumer[]
   weather?: WeatherSnapshot
 }

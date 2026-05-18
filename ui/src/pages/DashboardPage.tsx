@@ -12,11 +12,11 @@ const SOURCE_LABELS: Record<string, string> = {
   generator: 'Generator',
 }
 
-const SOURCE_VARIANTS: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
-  solar_only: 'default',
-  battery_solar: 'secondary',
-  battery_only: 'outline',
-  generator: 'destructive',
+const SOURCE_CLASSES: Record<string, string> = {
+  solar_only:   'border-transparent bg-green-500 text-white',
+  battery_solar: 'border-transparent bg-yellow-400 text-black',
+  battery_only:  'border-transparent bg-red-500 text-white',
+  generator:     'border-transparent bg-orange-500 text-white',
 }
 
 function fmt(w: number) {
@@ -48,7 +48,7 @@ export function DashboardPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         {data && (
-          <Badge variant={SOURCE_VARIANTS[data.power_source] ?? 'outline'}>
+          <Badge className={SOURCE_CLASSES[data.power_source] ?? 'border-transparent bg-muted text-muted-foreground'}>
             {SOURCE_LABELS[data.power_source] ?? data.power_source}
           </Badge>
         )}
@@ -73,8 +73,9 @@ export function DashboardPage() {
         />
         <StatCard
           label="Consumption"
-          value={fmt(data?.total_consumption_w ?? 0)}
-          unit="W"
+          value={(data?.today_consumption_kwh ?? 0).toFixed(1)}
+          unit="kWh"
+          sub="today"
         />
       </div>
 

@@ -13,7 +13,7 @@ type DashboardResponse struct {
 	LoadPowerW        float32          `json:"load_power_w"`
 	GeneratorPowerW   float32          `json:"generator_power_w"`
 	PowerSource       string           `json:"power_source"`
-	TotalConsumptionW float32          `json:"total_consumption_w"`
+	TodayConsumptionKWh float32         `json:"today_consumption_kwh"`
 	TopConsumers      []Consumer       `json:"top_consumers"`
 	Weather           *WeatherSnapshot `json:"weather,omitempty"`
 }
@@ -108,21 +108,23 @@ func (s *Server) queryDashboard(ctx context.Context, window time.Duration) (*Das
 		s.cfg.SolarActiveThresholdW, s.cfg.GeneratorActiveThresholdW,
 	)
 
-	// IoTawatt: total consumption and top consumers over window
-	since := time.Now().Add(-window)
+	// IoTawatt: kWh consumed today (House series, since local midnight)
+	now := time.Now()
+	midnight := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 
 	totalRow := s.pool.QueryRow(ctx, `
-		SELECT COALESCE(SUM(avg_w), 0)::real
-		FROM (
-			SELECT AVG(watts) AS avg_w
-			FROM iotawatt_readings
-			WHERE time >= $1 AND watts IS NOT NULL
-			GROUP BY device, series
-		) sub
-	`, since)
-	if err := totalRow.Scan(&resp.TotalConsumptionW); err != nil {
+		SELECT COALESCE(SUM(avg_watts), 0)::real / 60000.0
+		FROM iotawatt_1min
+		WHERE series = 'House'
+		  AND bucket >= $1
+		  AND bucket < $2
+	`, midnight, now)
+	if err := totalRow.Scan(&resp.TodayConsumptionKWh); err != nil {
 		return nil, err
 	}
+
+	// Top consumers over the configured window
+	since := now.Add(-window)
 
 	consRows, err := s.pool.Query(ctx, `
 		SELECT device, series, AVG(watts)::real AS avg_watts
