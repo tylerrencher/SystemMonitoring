@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useRouterState, useNavigate } from '@tanstack/react-router'
-import { LayoutDashboard, Zap, Sun, CloudRain, ChevronUp, LogOut, Menu, Moon, SunMedium, Monitor, LogIn } from 'lucide-react'
+import { LayoutDashboard, Zap, Sun, CloudRain, Bell, ChevronUp, LogOut, Menu, Moon, SunMedium, Monitor, LogIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
@@ -13,6 +13,10 @@ const NAV = [
   { to: '/power', label: 'Power', icon: Zap },
   { to: '/solar', label: 'Solar', icon: Sun },
   { to: '/weather', label: 'Weather', icon: CloudRain },
+] as const
+
+const AUTH_NAV = [
+  { to: '/alerts', label: 'Alerts', icon: Bell },
 ] as const
 
 function NavLink({ to, label, icon: Icon }: { to: string; label: string; icon: React.ElementType }) {
@@ -70,6 +74,9 @@ function NavContent({ onNavigate }: { onNavigate?: () => void }) {
       <Separator />
       <nav className="flex-1 space-y-1 px-2 py-4" onClick={onNavigate}>
         {NAV.map((item) => (
+          <NavLink key={item.to} {...item} />
+        ))}
+        {user && AUTH_NAV.map((item) => (
           <NavLink key={item.to} {...item} />
         ))}
       </nav>

@@ -1,4 +1,4 @@
-import type { ChartPoint, SolarChartPoint, User, WeatherChartPoint } from '@/types/api'
+import type { AlertItem, AlertPreferences, ChartPoint, SolarChartPoint, User, WeatherChartPoint } from '@/types/api'
 
 export async function apiLogin(username: string, password: string): Promise<{ user: User }> {
   const res = await fetch('/api/v1/auth/login', {
@@ -54,6 +54,41 @@ export async function fetchSolarChart(params: {
   const res = await fetch(url)
   if (!res.ok) throw new Error('Query failed')
   return res.json() as Promise<SolarChartPoint[]>
+}
+
+export async function fetchAlerts(): Promise<AlertItem[]> {
+  const res = await fetch('/api/v1/alerts')
+  if (!res.ok) throw new Error('Failed to fetch alerts')
+  return res.json() as Promise<AlertItem[]>
+}
+
+export async function fetchAlertPreferences(): Promise<AlertPreferences> {
+  const res = await fetch('/api/v1/alerts/preferences')
+  if (!res.ok) throw new Error('Failed to fetch preferences')
+  return res.json() as Promise<AlertPreferences>
+}
+
+export async function putAlertPreferences(keys: string[]): Promise<void> {
+  const res = await fetch('/api/v1/alerts/preferences', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ keys }),
+  })
+  if (!res.ok) throw new Error('Failed to save preferences')
+}
+
+export async function apiMuteAlert(key: string, duration: string): Promise<void> {
+  const res = await fetch(`/api/v1/alerts/${encodeURIComponent(key)}/mute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ duration }),
+  })
+  if (!res.ok) throw new Error('Failed to mute alert')
+}
+
+export async function apiUnmuteAlert(key: string): Promise<void> {
+  const res = await fetch(`/api/v1/alerts/${encodeURIComponent(key)}/mute`, { method: 'DELETE' })
+  if (!res.ok) throw new Error('Failed to unmute alert')
 }
 
 export async function fetchWeatherChart(params: {

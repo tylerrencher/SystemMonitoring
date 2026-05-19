@@ -90,6 +90,9 @@ func (s *Server) Serve(ctx context.Context) error {
 
 // spaHandler serves static files and falls back to index.html for unknown paths
 // so that the React client-side router handles route resolution.
+// index.html is served with Cache-Control: no-store so mobile browsers always
+// fetch the latest build; hashed JS/CSS assets are left to default FileServer
+// caching since their filenames change on every rebuild.
 func spaHandler(fsys fs.FS) http.Handler {
 	server := http.FileServerFS(fsys)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -98,8 +101,12 @@ func spaHandler(fsys fs.FS) http.Handler {
 			path = "index.html"
 		}
 		if _, err := fs.Stat(fsys, path); err != nil {
+			w.Header().Set("Cache-Control", "no-store")
 			http.ServeFileFS(w, r, fsys, "index.html")
 			return
+		}
+		if path == "index.html" {
+			w.Header().Set("Cache-Control", "no-store")
 		}
 		server.ServeHTTP(w, r)
 	})

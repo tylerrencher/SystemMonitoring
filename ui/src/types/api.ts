@@ -4,6 +4,11 @@ export interface User {
   role: string
 }
 
+export interface ActiveAlert {
+  key: string
+  name: string
+}
+
 export interface Consumer {
   device: string
   series: string
@@ -25,6 +30,7 @@ export interface DashboardData {
   today_consumption_kwh: number
   top_consumers: Consumer[]
   weather?: WeatherSnapshot
+  active_alerts: ActiveAlert[]
 }
 
 export interface ChartPoint {
@@ -44,4 +50,15 @@ export interface SolarChartPoint {
 export interface WeatherChartPoint {
   time: string
   value: number | null
+}
+
+export interface AlertItem {
+  key: string
+  name: string
+  type: string
+}
+
+export interface AlertPreferences {
+  subscribed: string[]
+  mutes: Record<string, string>
 }

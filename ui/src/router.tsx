@@ -6,6 +6,7 @@ import { DashboardPage } from '@/pages/DashboardPage'
 import { PowerPage } from '@/pages/PowerPage'
 import { SolarPage } from '@/pages/SolarPage'
 import { WeatherPage } from '@/pages/WeatherPage'
+import { AlertsPage } from '@/pages/AlertsPage'
 
 interface RouterContext {
   auth: AuthContextValue
@@ -64,9 +65,15 @@ const weatherRoute = createRoute({
   component: WeatherPage,
 })
 
+const alertsRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/alerts',
+  component: AlertsPage,
+})
+
 const routeTree = rootRoute.addChildren([
   loginRoute,
-  protectedRoute.addChildren([dashboardRoute, powerRoute, solarRoute, weatherRoute]),
+  protectedRoute.addChildren([dashboardRoute, powerRoute, solarRoute, weatherRoute, alertsRoute]),
 ])
 
 export const router = createRouter({

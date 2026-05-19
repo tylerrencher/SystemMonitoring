@@ -62,7 +62,7 @@ func Load() (*Config, error) {
 		SolarActiveThresholdW:     parseFloat(getEnv("SOLAR_ACTIVE_THRESHOLD_W", "50")),
 		GeneratorActiveThresholdW: parseFloat(getEnv("GENERATOR_ACTIVE_THRESHOLD_W", "100")),
 
-		SMTPHost:     getEnv("SMTP_HOST", "smtp-mail.outlook.com"),
+		SMTPHost:     getEnv("SMTP_HOST", "smtp.gmail.com"),
 		SMTPUsername: os.Getenv("SMTP_USERNAME"),
 		SMTPPassword: os.Getenv("SMTP_PASSWORD"),
 		SMTPFrom:     getEnv("SMTP_FROM", os.Getenv("SMTP_USERNAME")),

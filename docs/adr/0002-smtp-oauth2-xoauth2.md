@@ -1,18 +1,16 @@
-# SMTP authentication via app password
+# SMTP via Gmail + app password (AUTH LOGIN)
 
-> **Superseded note:** This ADR originally documented a decision to use OAuth2 XOAUTH2. That implementation was reverted when Azure app registration for personal Outlook.com accounts required an Office 365 Management subscription to access the `SMTP.Send` permission. The implementation now uses an app password with `smtp.PlainAuth`. The original reasoning is preserved below for context.
+The alert engine sends email via Gmail SMTP with an app password.
 
----
+Outlook.com was the original provider. Two successive auth approaches were attempted and rejected by Microsoft:
+1. `smtp.PlainAuth` (AUTH PLAIN) — rejected with `504 5.7.4 Unrecognized authentication type`
+2. `loginAuth` (AUTH LOGIN) — rejected with `535 5.7.139 Authentication unsuccessful, basic authentication is disabled`
 
-# (Original) SMTP authentication via OAuth2 XOAUTH2, not app password
+Microsoft has disabled all basic auth for personal Outlook.com accounts. XOAUTH2 was the principled fix but requires an Azure app registration scoped to `SMTP.Send`, which is non-trivial. Gmail was chosen instead — it still supports SMTP with app passwords when 2FA is enabled, and setup is minutes not hours.
 
-The alert engine sends email via Outlook.com SMTP. The account has MFA enabled, which requires either an app password or OAuth2 for programmatic SMTP access. We use OAuth2 with the XOAUTH2 SASL mechanism.
-
-An app password grants broad account access if leaked and cannot be scoped. A refresh token obtained via OAuth2 device code flow is scoped to `https://outlook.office.com/SMTP.Send` only — if leaked, it can send email but cannot access calendar, contacts, or account settings, and can be revoked from Microsoft Entra without changing the account password.
-
-The one-time setup cost is a `monitor oauth2-setup` CLI command (device code flow — prints a URL, user completes auth in a browser, command prints a refresh token to store in `.env`). At runtime, `golang.org/x/oauth2` auto-refreshes the short-lived access token transparently. The XOAUTH2 SASL mechanism is ~15 lines implementing `net/smtp.Auth`.
+The implementation uses a custom `loginAuth` struct implementing `net/smtp.Auth` with the AUTH LOGIN mechanism. Gmail accepts AUTH LOGIN after STARTTLS on port 587.
 
 ## Considered options
 
-- **App password + PlainAuth** — simpler, but full account exposure on leak; Microsoft is also deprecating Basic Auth for SMTP on Exchange Online (does not yet apply to personal Outlook.com accounts, but trajectory is clear)
-- **OAuth2 XOAUTH2** — chosen: scope-limited, revocable, aligns with Microsoft's authentication direction
+- **Outlook + XOAUTH2** — correct long-term answer for Outlook; rejected due to setup complexity (Entra app registration, device code flow CLI, token refresh logic)
+- **Gmail + app password** — chosen: works today, minimal config (`SMTP_HOST`, `SMTP_USERNAME`, `SMTP_PASSWORD`), revocable app password scoped to one device

@@ -39,8 +39,7 @@ func doSend(cfg *config.Config, toEmail string, alerts []namedAlert) error {
 		return fmt.Errorf("starttls: %w", err)
 	}
 
-	auth := smtp.PlainAuth("", cfg.SMTPUsername, cfg.SMTPPassword, cfg.SMTPHost)
-	if err := c.Auth(auth); err != nil {
+	if err := c.Auth(loginAuth{cfg.SMTPUsername, cfg.SMTPPassword}); err != nil {
 		return fmt.Errorf("smtp auth: %w", err)
 	}
 
@@ -60,6 +59,28 @@ func doSend(cfg *config.Config, toEmail string, alerts []namedAlert) error {
 		return err
 	}
 	return w.Close()
+}
+
+// loginAuth implements smtp.Auth for the AUTH LOGIN mechanism required by Outlook.com.
+// Go's smtp.PlainAuth uses AUTH PLAIN, which Outlook's personal SMTP rejects.
+type loginAuth struct{ username, password string }
+
+func (a loginAuth) Start(_ *smtp.ServerInfo) (string, []byte, error) {
+	return "LOGIN", nil, nil
+}
+
+func (a loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	if !more {
+		return nil, nil
+	}
+	switch strings.ToLower(strings.TrimSpace(string(fromServer))) {
+	case "username:":
+		return []byte(a.username), nil
+	case "password:":
+		return []byte(a.password), nil
+	default:
+		return nil, fmt.Errorf("unexpected server challenge: %q", fromServer)
+	}
 }
 
 func buildMessage(from, to string, alerts []namedAlert) string {

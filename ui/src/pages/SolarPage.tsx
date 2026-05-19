@@ -12,6 +12,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ChartTimeRange, type TimeRange } from '@/components/ChartTimeRange'
 import { fetchInverters, fetchSolarChart } from '@/lib/api'
+import { makeXAxisFormatter } from '@/lib/utils'
 import { subHours } from 'date-fns'
 
 const METRICS = [
@@ -24,11 +25,6 @@ const METRICS = [
 function defaultRange(): TimeRange {
   const to = new Date()
   return { from: subHours(to, 24).toISOString(), to: to.toISOString() }
-}
-
-function fmtTime(iso: string) {
-  const d = new Date(iso)
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
 export function SolarPage() {
@@ -107,7 +103,7 @@ export function SolarPage() {
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis
                 dataKey="time"
-                tickFormatter={fmtTime}
+                tickFormatter={makeXAxisFormatter(range.from, range.to)}
                 tick={{ fontSize: 11 }}
                 minTickGap={60}
               />

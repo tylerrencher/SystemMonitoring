@@ -1,7 +1,10 @@
+import { useQuery } from '@tanstack/react-query'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatCard } from '@/components/StatCard'
 import { WsIndicator } from '@/components/WsIndicator'
+import { useAuth } from '@/lib/auth'
+import { fetchAlertPreferences } from '@/lib/api'
 import { useDashboard } from '@/lib/use-dashboard'
 import type { Consumer } from '@/types/api'
 
@@ -39,7 +42,17 @@ function ConsumerRow({ consumer, maxWatts }: { consumer: Consumer; maxWatts: num
 }
 
 export function DashboardPage() {
+  const { user } = useAuth()
   const { data, status } = useDashboard()
+
+  const { data: prefs } = useQuery({
+    queryKey: ['alert-preferences'],
+    queryFn: fetchAlertPreferences,
+    enabled: !!user,
+  })
+
+  const subscribedKeys = new Set(prefs?.subscribed ?? [])
+  const activeAlerts = (data?.active_alerts ?? []).filter(a => subscribedKeys.has(a.key))
 
   const maxConsumer = data?.top_consumers[0]?.avg_watts ?? 1
 
@@ -78,6 +91,19 @@ export function DashboardPage() {
           sub="today"
         />
       </div>
+
+      {activeAlerts.length > 0 && (
+        <div className="rounded-lg border border-yellow-400/50 bg-yellow-50 px-4 py-3 dark:border-yellow-400/30 dark:bg-yellow-950/30">
+          <p className="mb-2 text-sm font-semibold text-yellow-800 dark:text-yellow-300">Active Alerts</p>
+          <ul className="space-y-1">
+            {activeAlerts.map(alert => (
+              <li key={alert.key} className="text-sm text-yellow-700 dark:text-yellow-400">
+                {alert.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {data?.weather && (
         <div className="grid gap-4 sm:grid-cols-2">

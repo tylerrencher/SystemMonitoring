@@ -127,7 +127,7 @@ func evalThresholdBreach(ctx context.Context, pool *pgxpool.Pool, dataSource str
 		var val *float64
 		err := pool.QueryRow(ctx, `
 			SELECT avg_watts FROM iotawatt_1min
-			WHERE series = $1 AND bucket >= NOW() - INTERVAL '3 minutes'
+			WHERE series = $1 AND bucket >= NOW() - INTERVAL '5 minutes'
 			ORDER BY bucket DESC LIMIT 1
 		`, p.Series).Scan(&val)
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -260,7 +260,7 @@ func evalScheduledCheck(ctx context.Context, pool *pgxpool.Pool, dataSource stri
 	var val *float64
 	err := pool.QueryRow(ctx, `
 		SELECT avg_watts FROM iotawatt_1min
-		WHERE series = $1 AND bucket >= NOW() - INTERVAL '3 minutes'
+		WHERE series = $1 AND bucket >= NOW() - INTERVAL '5 minutes'
 		ORDER BY bucket DESC LIMIT 1
 	`, p.Series).Scan(&val)
 	if errors.Is(err, pgx.ErrNoRows) {

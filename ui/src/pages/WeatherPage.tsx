@@ -11,16 +11,12 @@ import {
 } from 'recharts'
 import { ChartTimeRange, type TimeRange } from '@/components/ChartTimeRange'
 import { fetchWeatherChart } from '@/lib/api'
+import { makeXAxisFormatter } from '@/lib/utils'
 import { subHours } from 'date-fns'
 
 function defaultRange(): TimeRange {
   const to = new Date()
   return { from: subHours(to, 24).toISOString(), to: to.toISOString() }
-}
-
-function fmtTime(iso: string) {
-  const d = new Date(iso)
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
 function WeatherChart({
@@ -59,7 +55,7 @@ function WeatherChart({
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis
                 dataKey="time"
-                tickFormatter={fmtTime}
+                tickFormatter={makeXAxisFormatter(range.from, range.to)}
                 tick={{ fontSize: 11 }}
                 minTickGap={60}
               />

@@ -56,6 +56,7 @@ func (e *Engine) tick(ctx context.Context) {
 			continue
 		}
 		if triggered {
+			log.Printf("[alerts] active: %s", def.Key)
 			active = append(active, ActiveAlert{Key: def.Key, Name: def.Name})
 			activeKeys = append(activeKeys, def.Key)
 		}
@@ -66,7 +67,11 @@ func (e *Engine) tick(ctx context.Context) {
 	}
 	e.state.set(active)
 
-	if e.cfg.SMTPPassword == "" || len(activeKeys) == 0 {
+	if len(activeKeys) == 0 {
+		return
+	}
+	if e.cfg.SMTPPassword == "" {
+		log.Printf("[alerts] skipping email: SMTP_PASSWORD not set")
 		return
 	}
 
