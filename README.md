@@ -101,8 +101,16 @@ go run ./cmd/monitor backfill --source pwrmone1 --from 2026-01-01 --to 2026-05-0
 ### Create a user account
 
 ```sh
-go run ./cmd/monitor useradd --name tyler --password secret --role admin
+go run ./cmd/monitor useradd --name tyler --password secret --role admin --email tyler@example.com
 ```
+
+| Flag | Required | Default | Description |
+|---|---|---|---|
+| `--name` | yes | — | Username |
+| `--password` | yes | — | Password (bcrypt-hashed before storage) |
+| `--role` | no | `viewer` | `admin` or `viewer` |
+| `--email` | no | — | Email address for alert notifications |
+| `--phone` | no | — | Phone number for SMS alerts |
 
 ---
 

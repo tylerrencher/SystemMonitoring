@@ -51,13 +51,14 @@
 - Theme: system / light / dark cycle, persisted in localStorage
 - Auth: optional login (app is open by default), user menu shows name + role + logout
 
-### Phase 4 — Alert engine ⬜
-- Define alert rules (battery SoC too low, no solar during expected production hours, generator running unexpectedly, etc.)
-- Evaluate rules on a tick (reuse dashboard query data already being computed)
-- Deliver notifications via SMS (Twilio) and/or email (SMTP)
-- Respect `alert_mutes` table to prevent repeat spam
-- `alert_preferences` table already in schema — per-user opt-in per alert key
-- Surface active alerts in the dashboard UI
+### Phase 4 — Alert engine ✅
+- Alert definitions in DB (`alerts` table, 15 seeded rules via migration 005)
+- `internal/alerts/` package: `Engine` (60s tick), `State` (in-memory RWMutex), `evaluate.go`, `email.go`
+- SMTP delivery via Gmail AUTH LOGIN (Outlook blocked basic auth — see ADR 0002)
+- Per-user subscriptions (`alert_preferences`) and mutes (`alert_mutes`) with snooze durations
+- Active alerts surfaced in WebSocket dashboard payload; banner filtered to user's subscribed alerts
+- `/alerts` management page: subscribe toggles + inline mute controls
+- Alert nav item shown when logged in; `Cache-Control: no-store` on `index.html` fixes mobile caching
 
 ### Phase 5 — Production deployment ⬜
 - Systemd service unit for the Go binary
